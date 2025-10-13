@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Robot Settings - API Configuration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            background: linear-gradient(90deg, #00aaff 0%, #0088cc 100%);
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            color: #00aaff;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(0, 170, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cccccc;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #00aaff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #666;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #00aaff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .btn {
+            background: linear-gradient(90deg, #00aaff 0%, #0088cc 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 170, 255, 0.3);
+        }
+
+        .btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 16px rgba(255, 255, 255, 0.1);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-connected {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .back-btn {
+                position: static;
+                transform: none;
+                margin-bottom: 15px;
+                display: block;
+                width: fit-content;
+            }
+        }
+
+        /* API Response Display */
+        .api-response {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 4px solid #00aaff;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .api-response.show {
+            display: block;
+        }
+
+        .api-response h4 {
+            color: #00aaff;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .api-response pre {
+            color: #cccccc;
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .btn.webhook {
+            background: linear-gradient(90deg, #ff6b35 0%, #f7931e 100%);
+        }
+
+        .btn.webhook:hover {
+            box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='/'">← Back</button>
+            <h1>🤖 Robot API Settings</h1>
+            <p>Configure your pet robot's API connections and behavior</p>
+        </div>
+
+        <div class="content">
+            <!-- API Configuration Section -->
+            <div class="section">
+                <h2>API Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="apiUrl">API Base URL</label>
+                    <input type="url" id="apiUrl" placeholder="http://localhost:3000/api" value="">
+                </div>
+
+                <div class="form-group">
+                    <label for="apiKey">API Key</label>
+                    <input type="password" id="apiKey" placeholder="Enter your API key">
+                </div>
+
+                <div class="form-group">
+                    <label for="deviceName">Device Name</label>
+                    <input type="text" id="deviceName" placeholder="My Pet Robot" value="Gismo Pet Robot">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        API Status: 
+                        <span class="status-indicator status-disconnected" id="apiStatus">Disconnected</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Robot Behavior Section -->
+            <div class="section">
+                <h2>Robot Behavior</h2>
+                
+                <div class="form-group">
+                    <label for="emotionSpeed">Emotion Change Speed (seconds)</label>
+                    <input type="range" id="emotionSpeed" min="0.5" max="5" step="0.5" value="1">
+                    <span id="emotionSpeedValue">1.0s</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="blinkFrequency">Blink Frequency</label>
+                    <select id="blinkFrequency">
+                        <option value="1">Very Frequent</option>
+                        <option value="2">Frequent</option>
+                        <option value="3" selected>Normal</option>
+                        <option value="4">Rare</option>
+                        <option value="5">Very Rare</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <span style="margin-right: 15px;">Auto Sleep Mode</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoSleep">
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Voice Commands Section -->
+            <div class="section">
+                <h2>Voice Commands</h2>
+                
+                <div class="form-group">
+                    <label>
+                        <span style="margin-right: 15px;">Enable Voice Control</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="voiceControl">
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="wakeWord">Wake Word</label>
+                    <input type="text" id="wakeWord" placeholder="Hey Gismo" value="Hey Gismo">
+                </div>
+
+                <div class="form-group">
+                    <label for="language">Language</label>
+                    <select id="language">
+                        <option value="en">English</option>
+                        <option value="tr" selected>Türkçe</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Advanced Settings -->
+            <div class="section">
+                <h2>Advanced Settings</h2>
+                
+                <div class="form-group">
+                    <label for="customCommands">Custom Commands (JSON)</label>
+                    <textarea id="customCommands" placeholder='{"happy": "smile", "sleep": "close_eyes"}'></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <span style="margin-right: 15px;">Debug Mode</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="debugMode">
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Webhook Test Section -->
+            <div class="section">
+                <h2>Webhook Test</h2>
+                
+                <div class="form-group">
+                    <label for="userPrompt">User Prompt</label>
+                    <textarea id="userPrompt" placeholder="Enter your prompt here..." style="min-height: 100px;">Hello robot, how are you?</textarea>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn webhook" onclick="sendWebhookRequest()">🚀 Send Webhook Request</button>
+                    <button class="btn secondary" onclick="showCurlCommand()">📋 Show cURL Command</button>
+                </div>
+
+                <!-- API Response Display -->
+                <div id="apiResponse" class="api-response">
+                    <h4>API Response:</h4>
+                    <pre id="responseContent"></pre>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <button class="btn" onclick="testConnection()">🔗 Test Connection</button>
+                <button class="btn" onclick="saveSettings()">💾 Save Settings</button>
+                <button class="btn secondary" onclick="resetSettings()">🔄 Reset to Default</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize settings
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Emotion speed slider
+            const emotionSpeed = document.getElementById('emotionSpeed');
+            const emotionSpeedValue = document.getElementById('emotionSpeedValue');
+            
+            emotionSpeed.addEventListener('input', (e) => {
+                emotionSpeedValue.textContent = e.target.value + 's';
+            });
+        }
+
+        function loadSettings() {
+            // Load saved settings from localStorage
+            const settings = JSON.parse(localStorage.getItem('robotSettings') || '{}');
+            
+            if (settings.apiUrl) document.getElementById('apiUrl').value = settings.apiUrl;
+            if (settings.apiKey) document.getElementById('apiKey').value = settings.apiKey;
+            if (settings.deviceName) document.getElementById('deviceName').value = settings.deviceName;
+            if (settings.emotionSpeed) document.getElementById('emotionSpeed').value = settings.emotionSpeed;
+            if (settings.blinkFrequency) document.getElementById('blinkFrequency').value = settings.blinkFrequency;
+            if (settings.wakeWord) document.getElementById('wakeWord').value = settings.wakeWord;
+            if (settings.language) document.getElementById('language').value = settings.language;
+            if (settings.customCommands) document.getElementById('customCommands').value = settings.customCommands;
+            
+            document.getElementById('autoSleep').checked = settings.autoSleep || false;
+            document.getElementById('voiceControl').checked = settings.voiceControl || false;
+            document.getElementById('debugMode').checked = settings.debugMode || false;
+        }
+
+        function saveSettings() {
+            const settings = {
+                apiUrl: document.getElementById('apiUrl').value,
+                apiKey: document.getElementById('apiKey').value,
+                deviceName: document.getElementById('deviceName').value,
+                emotionSpeed: document.getElementById('emotionSpeed').value,
+                blinkFrequency: document.getElementById('blinkFrequency').value,
+                wakeWord: document.getElementById('wakeWord').value,
+                language: document.getElementById('language').value,
+                customCommands: document.getElementById('customCommands').value,
+                autoSleep: document.getElementById('autoSleep').checked,
+                voiceControl: document.getElementById('voiceControl').checked,
+                debugMode: document.getElementById('debugMode').checked
+            };
+
+            localStorage.setItem('robotSettings', JSON.stringify(settings));
+            
+            // Show success message
+            alert('✅ Settings saved successfully!');
+            
+            // Apply settings to main robot interface
+            applySettings(settings);
+        }
+
+        function applySettings(settings) {
+            // This will communicate settings to the main robot interface
+            if (settings.debugMode) {
+                console.log('🤖 Robot settings applied:', settings);
+            }
+        }
+
+        function resetSettings() {
+            if (confirm('Are you sure you want to reset all settings to default?')) {
+                localStorage.removeItem('robotSettings');
+                location.reload();
+            }
+        }
+
+        async function testConnection() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const statusIndicator = document.getElementById('apiStatus');
+            
+            if (!apiUrl) {
+                alert('Please enter an API URL first');
+                return;
+            }
+
+            statusIndicator.textContent = 'Testing...';
+            statusIndicator.className = 'status-indicator';
+            
+            try {
+                const response = await fetch(apiUrl + '/health', {
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    statusIndicator.textContent = 'Connected';
+                    statusIndicator.className = 'status-indicator status-connected';
+                    alert('🎉 Connection successful!');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusIndicator.textContent = 'Disconnected';
+                statusIndicator.className = 'status-indicator status-disconnected';
+                alert('❌ Connection failed: ' + error.message);
+            }
+        }
+
+        async function sendWebhookRequest() {
+            const userPrompt = document.getElementById('userPrompt').value.trim();
+            const responseDiv = document.getElementById('apiResponse');
+            const responseContent = document.getElementById('responseContent');
+            
+            if (!userPrompt) {
+                alert('Please enter a user prompt first');
+                return;
+            }
+
+            // Show response area and loading state
+            responseDiv.classList.add('show');
+            responseContent.textContent = 'Sending request...';
+
+            const webhookUrl = 'https://n8n-production-14b9.up.railway.app/webhook/user-prompt';
+            
+            try {
+                console.log('🚀 Sending webhook request (raw data):', userPrompt);
+
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'cors', // Explicitly set CORS mode
+                    headers: {
+                        'Content-Type': 'text/plain',
+                        'Accept': 'application/json'
+                    },
+                    body: userPrompt // Send raw prompt as body
+                });
+
+                const responseData = await response.text();
+                
+                // Try to parse as JSON, if it fails, show as text
+                let formattedResponse;
+                try {
+                    const jsonData = JSON.parse(responseData);
+                    formattedResponse = JSON.stringify(jsonData, null, 2);
+                } catch {
+                    formattedResponse = responseData;
+                }
+
+                responseContent.textContent = formattedResponse;
+                
+                if (response.ok) {
+                    console.log('✅ Webhook request successful:', formattedResponse);
+                } else {
+                    console.warn('⚠️ Webhook request failed with status:', response.status);
+                }
+
+            } catch (error) {
+                console.error('❌ Webhook request error:', error);
+                
+                // Try alternative method with no-cors mode
+                try {
+                    responseContent.textContent = 'Trying alternative method...';
+                    
+                    await fetch(webhookUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        },
+                        body: userPrompt // Send raw prompt as body
+                    });
+                    
+                    responseContent.textContent = 'Request sent successfully (no-cors mode)\nNote: Response content cannot be read due to CORS policy, but the request was sent.';
+                    
+                } catch (noCorsError) {
+                    responseContent.textContent = `CORS Error: ${error.message}\n\nThis is likely due to CORS policy restrictions. The webhook endpoint needs to allow requests from this domain.\n\nTechnical details:\n${noCorsError.message}`;
+                }
+            }
+        }
+
+        function showCurlCommand() {
+            const userPrompt = document.getElementById('userPrompt').value.trim() || 'Hello robot, how are you?';
+            const responseDiv = document.getElementById('apiResponse');
+            const responseContent = document.getElementById('responseContent');
+
+            const curlCommand = `curl -X POST "https://n8n-production-14b9.up.railway.app/webhook/9cc52b38-7b9a-4fcb-bf34-097fb2091133" \\
+  -H "Content-Type: text/plain" \\
+  -d "${userPrompt.replace(/"/g, '\\"')}"`;
+
+            responseDiv.classList.add('show');
+            responseContent.textContent = `You can test this webhook manually using cURL (raw data):\n\n${curlCommand}\n\nCopy this command and run it in your terminal to test the webhook directly.`;
+            
+            // Also copy to clipboard if possible
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(curlCommand).then(() => {
+                    console.log('📋 cURL command copied to clipboard');
+                });
+            }
+        }
+
+        console.log('🔧 Robot Settings Panel Loaded');
+    </script>
+</body>
+</html>
