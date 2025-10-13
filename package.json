@@ -1,0 +1,16 @@
+{
+  "name": "gismo-robot-interface",
+  "version": "1.0.0",
+  "description": "Gismo Robot Interface with Speech Recognition and FluxGarage RoboEyes",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["robot", "speech-recognition", "ai", "interface"],
+  "author": "OctaWorks",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
