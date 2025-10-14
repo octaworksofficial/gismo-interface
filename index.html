@@ -282,7 +282,8 @@
                     { name: 'TIRED', code: 1 },
                     { name: 'ANGRY', code: 2 },
                     { name: 'HAPPY', code: 3 },
-                    { name: 'THINKING', code: 4 }
+                    { name: 'THINKING', code: 4 },
+                    { name: 'CRYING', code: 5 }
                 ];
                 this.currentEmotionIndex = 0;
                 this.emotionInterval = null;
@@ -896,11 +897,11 @@
                 if (text.includes('#/#')) {
                     const parts = text.split('#/#');
                     
-                    // First part is emotion code (0-4)
+                    // First part is emotion code (0-5)
                     if (parts.length >= 1) {
                         const firstPart = parts[0].trim();
                         const parsedEmotion = parseInt(firstPart);
-                        if (!isNaN(parsedEmotion) && parsedEmotion >= 0 && parsedEmotion <= 4) {
+                        if (!isNaN(parsedEmotion) && parsedEmotion >= 0 && parsedEmotion <= 5) {
                             emotionCode = parsedEmotion;
                         }
                     }
@@ -981,6 +982,18 @@
                         this.roboEyes.setSweat(false);
                         this.roboEyes.setHFlicker(false);
                         this.roboEyes.setVFlicker(true, 3);
+                        break;
+                        
+                    case 5: // CRYING
+                        this.roboEyes.setMood(1); // Use TIRED mood for droopy eyes
+                        this.roboEyes.setDisplayColors('#000000', '#4488ff'); // Light blue teary eyes
+                        this.roboEyes.setSweat(true); // Use sweat as tears
+                        this.roboEyes.setHFlicker(false);
+                        this.roboEyes.setVFlicker(true, 2); // Gentle sobbing flicker
+                        // Trigger sad/confused animation for crying effect
+                        if (Math.random() < 0.6) {
+                            this.roboEyes.anim_confused();
+                        }
                         break;
                         
                     default:
