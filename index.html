@@ -312,6 +312,16 @@
                 ];
                 this.thinkingInterval = null;
                 
+                // Idle animations for default state
+                this.idleAnimations = [
+                    'blink',
+                    'look_around', 
+                    'micro_expression',
+                    'slight_movement'
+                ];
+                this.idleTimer = null;
+                this.lastIdleTime = Date.now();
+                
                 this.init();
             }
             
@@ -357,7 +367,7 @@
                     this.roboEyes = new RoboEyes(this.canvas);
                     this.roboEyes.begin(this.canvas.width, this.canvas.height, 60); // 60 FPS
                     this.roboEyes.setDisplayColors('#000000', '#00aaff');
-                    this.roboEyes.setAutoblinker(true, 3, 5); // Auto blink every 3-8 seconds
+                    this.roboEyes.setAutoblinker(true, 2, 4); // More frequent blinking (2-4 seconds)
                     this.roboEyes.setCuriosity(false); // Disable mouse/touch tracking
                     this.roboEyes.open(); // Start with eyes open
                     
@@ -385,10 +395,70 @@
                 const animate = () => {
                     if (this.roboEyes) {
                         this.roboEyes.update();
+                        
+                        // Handle idle animations in NORMAL state
+                        if (this.robotState === 'NORMAL') {
+                            this.handleIdleAnimations();
+                        }
                     }
                     requestAnimationFrame(animate);
                 };
                 animate();
+            }
+            
+            handleIdleAnimations() {
+                const now = Date.now();
+                const timeSinceLastIdle = now - this.lastIdleTime;
+                
+                // Trigger random idle animation every 8-15 seconds
+                if (timeSinceLastIdle > 8000 + Math.random() * 7000) {
+                    this.playRandomIdleAnimation();
+                    this.lastIdleTime = now;
+                }
+            }
+            
+            playRandomIdleAnimation() {
+                if (!this.roboEyes || this.robotState !== 'NORMAL') return;
+                
+                const animations = [
+                    () => {
+                        // Subtle look around
+                        console.log('🎭 Idle: Looking around');
+                        if (Math.random() < 0.5) {
+                            this.roboEyes.anim_confused(); // Subtle head movement
+                        }
+                    },
+                    () => {
+                        // Micro blink sequence
+                        console.log('🎭 Idle: Blink sequence');
+                        setTimeout(() => this.roboEyes.blink(), 0);
+                        setTimeout(() => this.roboEyes.blink(), 300);
+                    },
+                    () => {
+                        // Very subtle flicker (like slight alertness)
+                        console.log('🎭 Idle: Micro alertness');
+                        this.roboEyes.setVFlicker(true, 1);
+                        setTimeout(() => {
+                            if (this.robotState === 'NORMAL') {
+                                this.roboEyes.setVFlicker(false);
+                            }
+                        }, 1500);
+                    },
+                    () => {
+                        // Momentary color shift (like processing something in background)
+                        console.log('🎭 Idle: Color pulse');
+                        this.roboEyes.setDisplayColors('#000000', '#0088dd');
+                        setTimeout(() => {
+                            if (this.robotState === 'NORMAL') {
+                                this.roboEyes.setDisplayColors('#000000', '#00aaff');
+                            }
+                        }, 800);
+                    }
+                ];
+                
+                // Pick random animation
+                const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
+                randomAnimation();
             }
             
             setupEventListeners() {
@@ -748,7 +818,10 @@
                             this.startListening();
                         }
                         
-                        // Reset to default blue eyes
+                        // Reset idle timer
+                        this.lastIdleTime = Date.now();
+                        
+                        // Reset to default blue eyes with subtle life
                         if (this.roboEyes) {
                             this.roboEyes.setMood(0); // DEFAULT emotion
                             this.roboEyes.setDisplayColors('#000000', '#00aaff'); // Blue eyes
@@ -1047,6 +1120,10 @@
                 if (this.cursorTimeout) {
                     clearTimeout(this.cursorTimeout);
                     this.cursorTimeout = null;
+                }
+                if (this.idleTimer) {
+                    clearTimeout(this.idleTimer);
+                    this.idleTimer = null;
                 }
             }
         }
