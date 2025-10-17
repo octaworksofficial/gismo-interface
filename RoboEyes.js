@@ -143,6 +143,8 @@ class RoboEyes {
         // Sweat animation
         this.sweat = false;
         this.sweatBorderRadius = 6;
+        this.tearColor = null; // Custom tear color (null = use MAINCOLOR)
+        this.wateryEyes = false; // Watery eyes effect for crying
         
         // Sweat drops
         this.sweat1 = { xInitial: 4, x: 0, y: 4, yMax: 0, height: 4, width: 2 };
@@ -332,6 +334,185 @@ class RoboEyes {
         this.sweat = sweat;
     }
     
+    // Set custom tear color for crying (if null, uses MAINCOLOR)
+    setTearColor(color) {
+        this.tearColor = color;
+    }
+    
+    // Set watery eyes effect
+    setWateryEyes(watery) {
+        this.wateryEyes = watery;
+    }
+    
+    // Eye movement animations for sound reactions
+    anim_lookLeft() {
+        this.eyeLx = this.eyeLxDefault - 20;
+        this.eyeRx = this.eyeRxDefault - 20;
+        setTimeout(() => {
+            this.eyeLx = this.eyeLxDefault;
+            this.eyeRx = this.eyeRxDefault;
+        }, 300);
+    }
+    
+    anim_lookRight() {
+        this.eyeLx = this.eyeLxDefault + 20;
+        this.eyeRx = this.eyeRxDefault + 20;
+        setTimeout(() => {
+            this.eyeLx = this.eyeLxDefault;
+            this.eyeRx = this.eyeRxDefault;
+        }, 300);
+    }
+    
+    anim_lookAround() {
+        // Random left or right look
+        if (Math.random() < 0.5) {
+            this.anim_lookLeft();
+        } else {
+            this.anim_lookRight();
+        }
+    }
+    
+    anim_soundProcessing() {
+        // Quick left-right-center movement for sound processing
+        this.eyeLx = this.eyeLxDefault - 15;
+        this.eyeRx = this.eyeRxDefault - 15;
+        
+        setTimeout(() => {
+            this.eyeLx = this.eyeLxDefault + 15;
+            this.eyeRx = this.eyeRxDefault + 15;
+        }, 150);
+        
+        setTimeout(() => {
+            this.eyeLx = this.eyeLxDefault;
+            this.eyeRx = this.eyeRxDefault;
+        }, 300);
+    }
+    
+    anim_listeningPulse() {
+        // Gentle size pulse while actively listening
+        const originalLWidth = this.eyeLwidthCurrent;
+        const originalRWidth = this.eyeRwidthCurrent;
+        const originalLHeight = this.eyeLheightCurrent;
+        const originalRHeight = this.eyeRheightCurrent;
+        
+        // Slightly enlarge eyes
+        this.eyeLwidthCurrent = originalLWidth * 1.1;
+        this.eyeRwidthCurrent = originalRWidth * 1.1;
+        this.eyeLheightCurrent = originalLHeight * 1.1;
+        this.eyeRheightCurrent = originalRHeight * 1.1;
+        
+        setTimeout(() => {
+            // Return to normal size
+            this.eyeLwidthCurrent = originalLWidth;
+            this.eyeRwidthCurrent = originalRWidth;
+            this.eyeLheightCurrent = originalLHeight;
+            this.eyeRheightCurrent = originalRHeight;
+        }, 200);
+    }
+    
+    anim_quickGlance() {
+        // Quick glance in a random direction for sound attention
+        const directions = ['left', 'right', 'up', 'down'];
+        const direction = directions[Math.floor(Math.random() * directions.length)];
+        
+        let offsetX = 0, offsetY = 0;
+        switch(direction) {
+            case 'left':
+                offsetX = -25;
+                break;
+            case 'right':
+                offsetX = 25;
+                break;
+            case 'up':
+                offsetY = -15;
+                break;
+            case 'down':
+                offsetY = 15;
+                break;
+        }
+        
+        this.eyeLx = this.eyeLxDefault + offsetX;
+        this.eyeRx = this.eyeRxDefault + offsetX;
+        this.eyeLy = this.eyeLyDefault + offsetY;
+        this.eyeRy = this.eyeRyDefault + offsetY;
+        
+        setTimeout(() => {
+            this.eyeLx = this.eyeLxDefault;
+            this.eyeRx = this.eyeRxDefault;
+            this.eyeLy = this.eyeLyDefault;
+            this.eyeRy = this.eyeRyDefault;
+        }, 400);
+    }
+    
+    anim_commandListeningIntense() {
+        // Intense listening animation - multiple movements
+        const movements = [
+            {delay: 0, x: -20, y: 0},
+            {delay: 200, x: 20, y: 0},
+            {delay: 400, x: 0, y: -10},
+            {delay: 600, x: 0, y: 0}
+        ];
+        
+        movements.forEach(movement => {
+            setTimeout(() => {
+                this.eyeLx = this.eyeLxDefault + movement.x;
+                this.eyeRx = this.eyeRxDefault + movement.x;
+                this.eyeLy = this.eyeLyDefault + movement.y;
+                this.eyeRy = this.eyeRyDefault + movement.y;
+            }, movement.delay);
+        });
+    }
+    
+    anim_scanningEffect() {
+        // Scanning effect - smooth sweep from left to right
+        let currentOffset = -30;
+        const targetOffset = 30;
+        const step = 4;
+        
+        const sweep = () => {
+            this.eyeLx = this.eyeLxDefault + currentOffset;
+            this.eyeRx = this.eyeRxDefault + currentOffset;
+            
+            currentOffset += step;
+            if (currentOffset <= targetOffset) {
+                setTimeout(sweep, 30);
+            } else {
+                // Return to center
+                setTimeout(() => {
+                    this.eyeLx = this.eyeLxDefault;
+                    this.eyeRx = this.eyeRxDefault;
+                }, 100);
+            }
+        };
+        
+        sweep();
+    }
+    
+    anim_activeListeningPulse() {
+        // More dramatic pulse effect for active listening
+        const originalLWidth = this.eyeLwidthCurrent;
+        const originalRWidth = this.eyeRwidthCurrent;
+        const originalLHeight = this.eyeLheightCurrent;
+        const originalRHeight = this.eyeRheightCurrent;
+        
+        // Pulse sequence: expand -> contract -> expand -> normal
+        const pulseSteps = [
+            {scale: 1.2, delay: 0},
+            {scale: 0.9, delay: 150},
+            {scale: 1.15, delay: 300},
+            {scale: 1.0, delay: 450}
+        ];
+        
+        pulseSteps.forEach(step => {
+            setTimeout(() => {
+                this.eyeLwidthCurrent = originalLWidth * step.scale;
+                this.eyeRwidthCurrent = originalRWidth * step.scale;
+                this.eyeLheightCurrent = originalLHeight * step.scale;
+                this.eyeRheightCurrent = originalRHeight * step.scale;
+            }, step.delay);
+        });
+    }
+    
     // Screen constraints
     getScreenConstraint_X() {
         return this.screenWidth - this.eyeLwidthCurrent - this.spaceBetweenCurrent - this.eyeRwidthCurrent;
@@ -510,6 +691,11 @@ class RoboEyes {
         // Draw mood eyelids
         this.drawMoodEyelids();
         
+        // Draw watery eyes effect
+        if (this.wateryEyes) {
+            this.drawWateryEyes();
+        }
+        
         // Draw sweat drops
         if (this.sweat) {
             this.drawSweatDrops();
@@ -659,7 +845,8 @@ class RoboEyes {
         }
         
         this.sweat1.x = this.sweat1.xInitial - (this.sweat1.width / 2);
-        this.fillRoundRect(this.sweat1.x, this.sweat1.y, this.sweat1.width, this.sweat1.height, this.sweatBorderRadius, this.MAINCOLOR);
+        const tearColor1 = this.tearColor || this.MAINCOLOR;
+        this.fillRoundRect(this.sweat1.x, this.sweat1.y, this.sweat1.width, this.sweat1.height, this.sweatBorderRadius, tearColor1);
         
         // Sweat drop 2
         if (this.sweat2.y <= this.sweat2.yMax) {
@@ -681,7 +868,8 @@ class RoboEyes {
         }
         
         this.sweat2.x = this.sweat2.xInitial - (this.sweat2.width / 2);
-        this.fillRoundRect(this.sweat2.x, this.sweat2.y, this.sweat2.width, this.sweat2.height, this.sweatBorderRadius, this.MAINCOLOR);
+        const tearColor2 = this.tearColor || this.MAINCOLOR;
+        this.fillRoundRect(this.sweat2.x, this.sweat2.y, this.sweat2.width, this.sweat2.height, this.sweatBorderRadius, tearColor2);
         
         // Sweat drop 3
         if (this.sweat3.y <= this.sweat3.yMax) {
@@ -703,7 +891,97 @@ class RoboEyes {
         }
         
         this.sweat3.x = this.sweat3.xInitial - (this.sweat3.width / 2);
-        this.fillRoundRect(this.sweat3.x, this.sweat3.y, this.sweat3.width, this.sweat3.height, this.sweatBorderRadius, this.MAINCOLOR);
+        const tearColor3 = this.tearColor || this.MAINCOLOR;
+        this.fillRoundRect(this.sweat3.x, this.sweat3.y, this.sweat3.width, this.sweat3.height, this.sweatBorderRadius, tearColor3);
+    }
+    
+    drawWateryEyes() {
+        // Create watery/glossy effect inside the eyes
+        const ctx = this.canvas.getContext('2d');
+        ctx.globalAlpha = 0.3; // Semi-transparent for glossy effect
+        
+        // Left eye watery effect
+        if (this.eyeLheightCurrent > 0) {
+            // Create gradient for watery effect
+            const leftGradient = ctx.createLinearGradient(
+                this.eyeLx, this.eyeLy,
+                this.eyeLx, this.eyeLy + this.eyeLheightCurrent
+            );
+            leftGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Bright highlight at top
+            leftGradient.addColorStop(0.3, 'rgba(200, 240, 255, 0.6)'); // Light blue tint
+            leftGradient.addColorStop(0.7, 'rgba(150, 200, 255, 0.4)'); // More blue
+            leftGradient.addColorStop(1, 'rgba(100, 150, 255, 0.2)'); // Darker blue at bottom
+            
+            ctx.fillStyle = leftGradient;
+            this.fillRoundRectWithContext(ctx, this.eyeLx + 2, this.eyeLy + 2, 
+                this.eyeLwidthCurrent - 4, this.eyeLheightCurrent - 4, 
+                this.eyeLborderRadiusCurrent - 2);
+            
+            // Add small highlight spots for extra wetness
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            const highlight1X = this.eyeLx + this.eyeLwidthCurrent * 0.3;
+            const highlight1Y = this.eyeLy + this.eyeLheightCurrent * 0.2;
+            ctx.beginPath();
+            ctx.arc(highlight1X, highlight1Y, 3, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Smaller highlight
+            const highlight2X = this.eyeLx + this.eyeLwidthCurrent * 0.7;
+            const highlight2Y = this.eyeLy + this.eyeLheightCurrent * 0.4;
+            ctx.beginPath();
+            ctx.arc(highlight2X, highlight2Y, 2, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        // Right eye watery effect (if not cyclops)
+        if (!this.cyclops && this.eyeRheightCurrent > 0) {
+            // Create gradient for watery effect
+            const rightGradient = ctx.createLinearGradient(
+                this.eyeRx, this.eyeRy,
+                this.eyeRx, this.eyeRy + this.eyeRheightCurrent
+            );
+            rightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Bright highlight at top
+            rightGradient.addColorStop(0.3, 'rgba(200, 240, 255, 0.6)'); // Light blue tint
+            rightGradient.addColorStop(0.7, 'rgba(150, 200, 255, 0.4)'); // More blue
+            rightGradient.addColorStop(1, 'rgba(100, 150, 255, 0.2)'); // Darker blue at bottom
+            
+            ctx.fillStyle = rightGradient;
+            this.fillRoundRectWithContext(ctx, this.eyeRx + 2, this.eyeRy + 2, 
+                this.eyeRwidthCurrent - 4, this.eyeRheightCurrent - 4, 
+                this.eyeRborderRadiusCurrent - 2);
+            
+            // Add small highlight spots for extra wetness
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            const highlight1X = this.eyeRx + this.eyeRwidthCurrent * 0.3;
+            const highlight1Y = this.eyeRy + this.eyeRheightCurrent * 0.2;
+            ctx.beginPath();
+            ctx.arc(highlight1X, highlight1Y, 3, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Smaller highlight
+            const highlight2X = this.eyeRx + this.eyeRwidthCurrent * 0.7;
+            const highlight2Y = this.eyeRy + this.eyeRheightCurrent * 0.4;
+            ctx.beginPath();
+            ctx.arc(highlight2X, highlight2Y, 2, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        ctx.globalAlpha = 1.0; // Reset alpha
+    }
+    
+    fillRoundRectWithContext(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        ctx.fill();
     }
 }
 

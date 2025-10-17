@@ -312,15 +312,9 @@
                 ];
                 this.thinkingInterval = null;
                 
-                // Idle animations for default state
-                this.idleAnimations = [
-                    'blink',
-                    'look_around', 
-                    'micro_expression',
-                    'slight_movement'
-                ];
-                this.idleTimer = null;
-                this.lastIdleTime = Date.now();
+                // Blinking animation for normal mode
+                this.blinkInterval = null;
+                this.isBlinking = false;
                 
                 this.init();
             }
@@ -367,7 +361,7 @@
                     this.roboEyes = new RoboEyes(this.canvas);
                     this.roboEyes.begin(this.canvas.width, this.canvas.height, 60); // 60 FPS
                     this.roboEyes.setDisplayColors('#000000', '#00aaff');
-                    this.roboEyes.setAutoblinker(true, 2, 4); // More frequent blinking (2-4 seconds)
+                    this.roboEyes.setAutoblinker(false); // Disable auto blink, we'll handle it manually
                     this.roboEyes.setCuriosity(false); // Disable mouse/touch tracking
                     this.roboEyes.open(); // Start with eyes open
                     
@@ -384,6 +378,9 @@
                     this.roboEyes.setHFlicker(false);
                     this.roboEyes.setVFlicker(false);
                     
+                    // Start custom blinking for normal mode
+                    this.startBlinking();
+                    
                     // Start the animation loop
                     this.startAnimationLoop();
                     
@@ -395,70 +392,10 @@
                 const animate = () => {
                     if (this.roboEyes) {
                         this.roboEyes.update();
-                        
-                        // Handle idle animations in NORMAL state
-                        if (this.robotState === 'NORMAL') {
-                            this.handleIdleAnimations();
-                        }
                     }
                     requestAnimationFrame(animate);
                 };
                 animate();
-            }
-            
-            handleIdleAnimations() {
-                const now = Date.now();
-                const timeSinceLastIdle = now - this.lastIdleTime;
-                
-                // Trigger random idle animation every 8-15 seconds
-                if (timeSinceLastIdle > 8000 + Math.random() * 7000) {
-                    this.playRandomIdleAnimation();
-                    this.lastIdleTime = now;
-                }
-            }
-            
-            playRandomIdleAnimation() {
-                if (!this.roboEyes || this.robotState !== 'NORMAL') return;
-                
-                const animations = [
-                    () => {
-                        // Subtle look around
-                        console.log('🎭 Idle: Looking around');
-                        if (Math.random() < 0.5) {
-                            this.roboEyes.anim_confused(); // Subtle head movement
-                        }
-                    },
-                    () => {
-                        // Micro blink sequence
-                        console.log('🎭 Idle: Blink sequence');
-                        setTimeout(() => this.roboEyes.blink(), 0);
-                        setTimeout(() => this.roboEyes.blink(), 300);
-                    },
-                    () => {
-                        // Very subtle flicker (like slight alertness)
-                        console.log('🎭 Idle: Micro alertness');
-                        this.roboEyes.setVFlicker(true, 1);
-                        setTimeout(() => {
-                            if (this.robotState === 'NORMAL') {
-                                this.roboEyes.setVFlicker(false);
-                            }
-                        }, 1500);
-                    },
-                    () => {
-                        // Momentary color shift (like processing something in background)
-                        console.log('🎭 Idle: Color pulse');
-                        this.roboEyes.setDisplayColors('#000000', '#0088dd');
-                        setTimeout(() => {
-                            if (this.robotState === 'NORMAL') {
-                                this.roboEyes.setDisplayColors('#000000', '#00aaff');
-                            }
-                        }, 800);
-                    }
-                ];
-                
-                // Pick random animation
-                const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
-                randomAnimation();
             }
             
             setupEventListeners() {
@@ -713,9 +650,41 @@
                 console.log('🎤 Heard:', fullTranscript);
                 
                 if (!this.isAwake) {
+                    // Default mode - react to any sound with eye movement
+                    if (fullTranscript) {
+                        // Eye movement animation when hearing sound in default mode
+                        if (this.roboEyes && this.robotState === 'NORMAL') {
+                            // Randomize between different attention animations
+                            const animations = ['lookAround', 'quickGlance'];
+                            const selectedAnim = animations[Math.floor(Math.random() * animations.length)];
+                            
+                            if (selectedAnim === 'lookAround') {
+                                this.roboEyes.anim_lookAround();
+                            } else {
+                                this.roboEyes.anim_quickGlance();
+                            }
+                        }
+                    }
+                    
                     // Check for wake word
                     if (fullTranscript.includes(this.wakeWord)) {
                         console.log('🤖 Wake word detected!');
+                        // Dramatic animation sequence for wake word detection
+                        if (this.roboEyes) {
+                            // First: intense pulse
+                            this.roboEyes.anim_activeListeningPulse();
+                            // Then: scanning effect after 300ms
+                            setTimeout(() => {
+                                this.roboEyes.anim_scanningEffect();
+                            }, 300);
+                            // Finally: double blink to show recognition
+                            setTimeout(() => {
+                                this.roboEyes.blink();
+                                setTimeout(() => {
+                                    this.roboEyes.blink();
+                                }, 200);
+                            }, 800);
+                        }
                         this.wakeUp();
                         return;
                     }
@@ -734,6 +703,21 @@
                     // Robot is awake, process command
                     this.lastSpeechTime = Date.now();
                     
+                    // Sound processing animation when in listening mode
+                    if (fullTranscript && this.roboEyes && this.robotState === 'LISTENING') {
+                        // More dramatic animations for command listening
+                        const animations = ['commandListeningIntense', 'scanningEffect', 'activeListeningPulse'];
+                        const selectedAnim = animations[Math.floor(Math.random() * animations.length)];
+                        
+                        if (selectedAnim === 'commandListeningIntense') {
+                            this.roboEyes.anim_commandListeningIntense();
+                        } else if (selectedAnim === 'scanningEffect') {
+                            this.roboEyes.anim_scanningEffect();
+                        } else {
+                            this.roboEyes.anim_activeListeningPulse();
+                        }
+                    }
+                    
                     if (finalTranscript) {
                         // Final result - add to current command
                         this.currentCommand += ' ' + finalTranscript;
@@ -748,6 +732,19 @@
                         const displayCommand = this.currentCommand + ' ' + interimTranscript;
                         this.speechIndicator.textContent = `🎤 "${displayCommand.trim()}"`;
                         this.resetSilenceTimer();
+                        
+                        // More noticeable animation for interim results
+                        if (this.roboEyes && this.robotState === 'LISTENING') {
+                            // Alternate between pulse and quick movements
+                            const interimAnimations = ['activeListeningPulse', 'soundProcessing'];
+                            const selectedAnim = interimAnimations[Math.floor(Math.random() * interimAnimations.length)];
+                            
+                            if (selectedAnim === 'activeListeningPulse') {
+                                this.roboEyes.anim_activeListeningPulse();
+                            } else {
+                                this.roboEyes.anim_soundProcessing();
+                            }
+                        }
                     }
                 }
             }
@@ -776,7 +773,7 @@
                         this.currentCommand = '';
                         this.setRobotState('THINKING');
                     }
-                }, 4000); // 4 seconds of silence (increased from 2)
+                }, 2000); // 4 seconds of silence (increased from 2)
             }
             
             resetSilenceTimer() {
@@ -818,17 +815,25 @@
                             this.startListening();
                         }
                         
-                        // Reset idle timer
-                        this.lastIdleTime = Date.now();
-                        
-                        // Reset to default blue eyes with subtle life
+                        // Reset to default blue eyes
                         if (this.roboEyes) {
                             this.roboEyes.setMood(0); // DEFAULT emotion
                             this.roboEyes.setDisplayColors('#000000', '#00aaff'); // Blue eyes
+                            this.roboEyes.setTearColor(null); // Reset tear color
+                            this.roboEyes.setWateryEyes(false); // Reset watery eyes
                             this.roboEyes.setSweat(false);
                             this.roboEyes.setHFlicker(false);
                             this.roboEyes.setVFlicker(false);
+                            
+                            // Reset eye sizes to default
+                            this.roboEyes.eyeLwidthCurrent = this.roboEyes.eyeLwidthDefault;
+                            this.roboEyes.eyeRwidthCurrent = this.roboEyes.eyeRwidthDefault;
+                            this.roboEyes.eyeLheightCurrent = this.roboEyes.eyeLheightDefault;
+                            this.roboEyes.eyeRheightCurrent = this.roboEyes.eyeRheightDefault;
                         }
+                        
+                        // Start blinking for normal mode
+                        this.startBlinking();
                         break;
                         
                     case 'LISTENING':
@@ -842,14 +847,25 @@
                             this.startListening();
                         }
                         
-                        // Keep blue eyes while listening
+                        // Keep blue eyes while listening - ENLARGED for attention
                         if (this.roboEyes) {
                             this.roboEyes.setMood(0); // DEFAULT emotion
                             this.roboEyes.setDisplayColors('#000000', '#00aaff'); // Blue eyes
+                            this.roboEyes.setTearColor(null); // Reset tear color
+                            this.roboEyes.setWateryEyes(false); // Reset watery eyes
                             this.roboEyes.setSweat(false);
                             this.roboEyes.setHFlicker(false);
                             this.roboEyes.setVFlicker(false);
+                            
+                            // Enlarge eyes by 30% for listening mode
+                            this.roboEyes.eyeLwidthCurrent = this.roboEyes.eyeLwidthDefault * 2;
+                            this.roboEyes.eyeRwidthCurrent = this.roboEyes.eyeRwidthDefault * 2;
+                            this.roboEyes.eyeLheightCurrent = this.roboEyes.eyeLheightDefault * 2;
+                            this.roboEyes.eyeRheightCurrent = this.roboEyes.eyeRheightDefault * 2;
                         }
+                        
+                        // Stop blinking while listening for commands
+                        this.stopBlinking();
                         break;
                         
                     case 'THINKING':
@@ -858,6 +874,9 @@
                         this.speechIndicator.style.opacity = '1';
                         this.showThinkingBubble(); // Show animated thinking bubble
                         
+                        // Stop blinking while thinking
+                        this.stopBlinking();
+                        
                         // STOP listening while thinking
                         this.stopListening();
                         
@@ -865,7 +884,15 @@
                         if (this.roboEyes) {
                             this.roboEyes.setMood(4); // THINKING emotion code
                             this.roboEyes.setDisplayColors('#000000', '#ffaa00'); // Orange eyes
+                            this.roboEyes.setTearColor(null); // Reset tear color
+                            this.roboEyes.setWateryEyes(false); // Reset watery eyes
                             this.roboEyes.setVFlicker(true, 3); // Thinking flicker
+                            
+                            // Reset eye sizes to default for thinking
+                            this.roboEyes.eyeLwidthCurrent = this.roboEyes.eyeLwidthDefault;
+                            this.roboEyes.eyeRwidthCurrent = this.roboEyes.eyeRwidthDefault;
+                            this.roboEyes.eyeLheightCurrent = this.roboEyes.eyeLheightDefault;
+                            this.roboEyes.eyeRheightCurrent = this.roboEyes.eyeRheightDefault;
                         }
                         break;
                 }
@@ -1001,9 +1028,17 @@
                     console.log('🔵 Resetting to blue eyes after response');
                     this.roboEyes.setMood(0); // DEFAULT emotion
                     this.roboEyes.setDisplayColors('#000000', '#00aaff'); // Blue eyes
+                    this.roboEyes.setTearColor(null); // Reset tear color to default
+                    this.roboEyes.setWateryEyes(false); // Reset watery eyes
                     this.roboEyes.setSweat(false);
                     this.roboEyes.setHFlicker(false);
                     this.roboEyes.setVFlicker(false);
+                    
+                    // Reset eye sizes to default
+                    this.roboEyes.eyeLwidthCurrent = this.roboEyes.eyeLwidthDefault;
+                    this.roboEyes.eyeRwidthCurrent = this.roboEyes.eyeRwidthDefault;
+                    this.roboEyes.eyeLheightCurrent = this.roboEyes.eyeLheightDefault;
+                    this.roboEyes.eyeRheightCurrent = this.roboEyes.eyeRheightDefault;
                 }
                 // Also reset robot state to normal listening mode
                 this.setRobotState('NORMAL');
@@ -1018,51 +1053,85 @@
                     case 0: // DEFAULT
                         this.roboEyes.setMood(0);
                         this.roboEyes.setDisplayColors('#000000', '#00aaff'); // Blue eyes
+                        this.roboEyes.setTearColor(null); // Reset tear color
+                        this.roboEyes.setWateryEyes(false); // Reset watery eyes
                         this.roboEyes.setSweat(false);
                         this.roboEyes.setHFlicker(false);
                         this.roboEyes.setVFlicker(false);
+                        // Start blinking for default emotion
+                        this.startBlinking();
                         break;
                         
                     case 1: // TIRED
                         this.roboEyes.setMood(1);
                         this.roboEyes.setDisplayColors('#000000', '#8800ff'); // Purple eyes
+                        this.roboEyes.setTearColor(null); // Reset tear color
+                        this.roboEyes.setWateryEyes(false); // Reset watery eyes
                         this.roboEyes.setSweat(true);
                         this.roboEyes.setHFlicker(false);
                         this.roboEyes.setVFlicker(false);
+                        // Stop blinking for tired emotion
+                        this.stopBlinking();
                         break;
                         
                     case 2: // ANGRY
                         this.roboEyes.setMood(2);
                         this.roboEyes.setDisplayColors('#000000', '#ff0000'); // Red eyes
+                        this.roboEyes.setTearColor(null); // Reset tear color
+                        this.roboEyes.setWateryEyes(false); // Reset watery eyes
                         this.roboEyes.setSweat(false);
                         this.roboEyes.setHFlicker(true, 5);
                         this.roboEyes.setVFlicker(false);
+                        // Stop blinking for angry emotion
+                        this.stopBlinking();
                         break;
                         
                     case 3: // HAPPY
                         this.roboEyes.setMood(3);
                         this.roboEyes.setDisplayColors('#000000', '#00ff00'); // Green eyes
+                        this.roboEyes.setTearColor(null); // Reset tear color
+                        this.roboEyes.setWateryEyes(false); // Reset watery eyes
                         this.roboEyes.setSweat(false);
                         this.roboEyes.setHFlicker(false);
                         this.roboEyes.setVFlicker(false);
                         // Trigger laugh animation for happy emotion
                         this.roboEyes.anim_laugh();
+                        // Stop blinking for happy emotion
+                        this.stopBlinking();
                         break;
                         
                     case 4: // THINKING (shouldn't happen in response, but just in case)
                         this.roboEyes.setMood(4);
                         this.roboEyes.setDisplayColors('#000000', '#ffaa00'); // Orange eyes
+                        this.roboEyes.setTearColor(null); // Reset tear color
+                        this.roboEyes.setWateryEyes(false); // Reset watery eyes
                         this.roboEyes.setSweat(false);
                         this.roboEyes.setHFlicker(false);
                         this.roboEyes.setVFlicker(true, 3);
+                        // Stop blinking for thinking emotion
+                        this.stopBlinking();
                         break;
                         
                     case 5: // CRYING
                         this.roboEyes.setMood(1); // Use TIRED mood for droopy eyes
-                        this.roboEyes.setDisplayColors('#000000', '#4488ff'); // Light blue teary eyes
-                        this.roboEyes.setSweat(true); // Use sweat as tears
+                        this.roboEyes.setDisplayColors('#000000', '#88aaff'); // Soft blue teary eyes
+                        this.roboEyes.setTearColor('#66ddff'); // Bright cyan tears for visibility
+                        this.roboEyes.setWateryEyes(true); // Enable watery/glossy eyes effect
+                        this.roboEyes.setSweat(true); // Enable tears
                         this.roboEyes.setHFlicker(false);
                         this.roboEyes.setVFlicker(true, 2); // Gentle sobbing flicker
+                        
+                        // Stop blinking for crying emotion (crying creates its own eye movement)
+                        this.stopBlinking();
+                        
+                        // Make tears bigger and more visible
+                        this.roboEyes.sweat1.width = 6;
+                        this.roboEyes.sweat1.height = 12;
+                        this.roboEyes.sweat2.width = 5;
+                        this.roboEyes.sweat2.height = 10;
+                        this.roboEyes.sweat3.width = 4;
+                        this.roboEyes.sweat3.height = 8;
+                        
                         // Trigger sad/confused animation for crying effect
                         if (Math.random() < 0.6) {
                             this.roboEyes.anim_confused();
@@ -1073,9 +1142,13 @@
                         // Default to normal blue eyes
                         this.roboEyes.setMood(0);
                         this.roboEyes.setDisplayColors('#000000', '#00aaff');
+                        this.roboEyes.setTearColor(null); // Reset tear color
+                        this.roboEyes.setWateryEyes(false); // Reset watery eyes
                         this.roboEyes.setSweat(false);
                         this.roboEyes.setHFlicker(false);
                         this.roboEyes.setVFlicker(false);
+                        // Start blinking for default case
+                        this.startBlinking();
                         break;
                 }
             }
@@ -1097,6 +1170,52 @@
                     clearInterval(this.thinkingInterval);
                     this.thinkingInterval = null;
                 }
+            }
+            
+            // Custom blinking system for normal mode
+            startBlinking() {
+                console.log('👁️ Starting custom blinking for normal mode');
+                
+                // Stop any existing blink interval
+                this.stopBlinking();
+                
+                // Start blinking every 1.5 seconds
+                this.blinkInterval = setInterval(() => {
+                    if (this.roboEyes && this.robotState === 'NORMAL' && !this.isBlinking) {
+                        this.performBlink();
+                    }
+                }, 1500); // 1.5 seconds
+            }
+            
+            stopBlinking() {
+                if (this.blinkInterval) {
+                    clearInterval(this.blinkInterval);
+                    this.blinkInterval = null;
+                }
+            }
+            
+            performBlink() {
+                if (!this.roboEyes || this.isBlinking) return;
+                
+                console.log('👁️ Performing custom blink');
+                this.isBlinking = true;
+                
+                // Close eyes quickly
+                this.roboEyes.eyeL_open = false;
+                this.roboEyes.eyeR_open = false;
+                this.roboEyes.eyeLheightCurrent = 5; // Small height for closed eyes
+                this.roboEyes.eyeRheightCurrent = 5;
+                
+                // Open eyes after 150ms for a noticeable blink
+                setTimeout(() => {
+                    if (this.roboEyes) {
+                        this.roboEyes.eyeL_open = true;
+                        this.roboEyes.eyeR_open = true;
+                        this.roboEyes.eyeLheightCurrent = this.roboEyes.eyeLheightDefault;
+                        this.roboEyes.eyeRheightCurrent = this.roboEyes.eyeRheightDefault;
+                        this.isBlinking = false;
+                    }
+                }, 150); // 150ms blink duration for noticeable effect
             }
             
             // Cleanup function to prevent memory leaks
@@ -1121,9 +1240,9 @@
                     clearTimeout(this.cursorTimeout);
                     this.cursorTimeout = null;
                 }
-                if (this.idleTimer) {
-                    clearTimeout(this.idleTimer);
-                    this.idleTimer = null;
+                if (this.blinkInterval) {
+                    clearInterval(this.blinkInterval);
+                    this.blinkInterval = null;
                 }
             }
         }
