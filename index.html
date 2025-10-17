@@ -635,12 +635,12 @@
                 if (isOnline) {
                     this.hardwareStatus.classList.remove('offline');
                     this.hardwareStatus.classList.add('online');
-                    this.hardwareStatusText.textContent = '🤖 Donanım Bağlı';
+                    this.hardwareStatusText.textContent = ' Donanım Bağlı';
                     console.log('✅ Hardware is online');
                 } else {
                     this.hardwareStatus.classList.remove('online');
                     this.hardwareStatus.classList.add('offline');
-                    this.hardwareStatusText.textContent = '❌ Donanım Çevrimdışı';
+                    this.hardwareStatusText.textContent = ' Donanım Çevrimdışı';
                     console.log('❌ Hardware is offline');
                 }
             }
