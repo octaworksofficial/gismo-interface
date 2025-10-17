@@ -116,6 +116,64 @@
             pointer-events: none;
         }
 
+        /* Hardware Status Indicator */
+        .hardware-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: #ffffff;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .hardware-status.online {
+            border-color: #00ff00;
+            background: rgba(0, 170, 0, 0.3);
+        }
+
+        .hardware-status.offline {
+            border-color: #ff0000;
+            background: rgba(170, 0, 0, 0.3);
+        }
+
+        .hardware-status .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: statusPulse 2s infinite;
+        }
+
+        .hardware-status.online .status-dot {
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .hardware-status.offline .status-dot {
+            background: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Hide hardware status in fullscreen */
+        body.fullscreen .hardware-status {
+            opacity: 0;
+            pointer-events: none;
+        }
+
         /* Speech Recognition Indicator */
         .speech-indicator {
             position: fixed;
@@ -251,6 +309,12 @@
     <canvas id="roboEyesCanvas"></canvas>
     <div class="loading" id="loading">FluxGarage RoboEyes Loading...</div>
     
+    <!-- Hardware Status Indicator -->
+    <div class="hardware-status offline" id="hardwareStatus">
+        <div class="status-dot"></div>
+        <span id="hardwareStatusText">Kontrol ediliyor...</span>
+    </div>
+    
     <!-- Settings button - very subtle -->
     <button class="settings-btn" id="settingsBtn" title="Settings">⚙</button>
     
@@ -273,7 +337,13 @@
                 this.responseDisplay = document.getElementById('responseDisplay');
                 this.thinkingBubble = document.getElementById('thinkingBubble');
                 this.thinkingText = document.getElementById('thinkingText');
+                this.hardwareStatus = document.getElementById('hardwareStatus');
+                this.hardwareStatusText = document.getElementById('hardwareStatusText');
                 this.roboEyes = null;
+                
+                // Hardware status check
+                this.hardwareCheckInterval = null;
+                this.isHardwareOnline = false;
                 
                 // Robot states
                 this.robotState = 'NORMAL'; // NORMAL, LISTENING, THINKING
@@ -326,6 +396,7 @@
                 this.autoEnterFullscreen();
                 this.setupCursorHiding();
                 this.setupSettingsButton();
+                this.startHardwareStatusCheck();
                 
                 // Initialize speech recognition after a short delay
                 setTimeout(() => {
@@ -520,6 +591,58 @@
                     // Navigate to settings page
                     window.location.href = 'settings.html';
                 });
+            }
+            
+            startHardwareStatusCheck() {
+                console.log('🔌 Starting hardware status check...');
+                
+                // Check immediately
+                this.checkHardwareStatus();
+                
+                // Then check every 3 seconds
+                this.hardwareCheckInterval = setInterval(() => {
+                    this.checkHardwareStatus();
+                }, 3000);
+            }
+            
+            async checkHardwareStatus() {
+                try {
+                    const response = await fetch('https://n8n-production-14b9.up.railway.app/webhook/isHardwareAlive', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.text();
+                        const isOnline = result.toLowerCase().trim() === 'true';
+                        
+                        this.updateHardwareStatus(isOnline);
+                    } else {
+                        console.warn('⚠️ Hardware check failed with status:', response.status);
+                        this.updateHardwareStatus(false);
+                    }
+                } catch (error) {
+                    console.error('❌ Hardware check error:', error.message);
+                    this.updateHardwareStatus(false);
+                }
+            }
+            
+            updateHardwareStatus(isOnline) {
+                this.isHardwareOnline = isOnline;
+                
+                if (isOnline) {
+                    this.hardwareStatus.classList.remove('offline');
+                    this.hardwareStatus.classList.add('online');
+                    this.hardwareStatusText.textContent = '🤖 Donanım Bağlı';
+                    console.log('✅ Hardware is online');
+                } else {
+                    this.hardwareStatus.classList.remove('online');
+                    this.hardwareStatus.classList.add('offline');
+                    this.hardwareStatusText.textContent = '❌ Donanım Çevrimdışı';
+                    console.log('❌ Hardware is offline');
+                }
             }
             
             async initializeSpeechRecognition() {
