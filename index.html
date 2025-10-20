@@ -386,6 +386,12 @@
                 this.blinkInterval = null;
                 this.isBlinking = false;
                 
+                // Camera functionality
+                this.stream = null;
+                this.captureCanvas = null;
+                this.captureContext = null;
+                this.isCameraReady = false;
+                
                 this.init();
             }
             
@@ -397,6 +403,7 @@
                 this.setupCursorHiding();
                 this.setupSettingsButton();
                 this.startHardwareStatusCheck();
+                this.initializeCamera();
                 
                 // Initialize speech recognition after a short delay
                 setTimeout(() => {
@@ -602,7 +609,7 @@
                 // Then check every 3 seconds
                 this.hardwareCheckInterval = setInterval(() => {
                     this.checkHardwareStatus();
-                }, 3000);
+                }, 100);
             }
             
             async checkHardwareStatus() {
@@ -643,6 +650,129 @@
                     this.hardwareStatusText.textContent = ' Donanım Çevrimdışı';
                     console.log('❌ Hardware is offline');
                 }
+            }
+            
+            async initializeCamera() {
+                console.log('📷 Initializing camera...');
+                
+                try {
+                    // Create hidden canvas for photo capture
+                    this.captureCanvas = document.createElement('canvas');
+                    this.captureContext = this.captureCanvas.getContext('2d');
+                    this.captureCanvas.style.display = 'none';
+                    document.body.appendChild(this.captureCanvas);
+                    
+                    // Request camera permission and get video stream
+                    this.stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                            facingMode: 'user' // Front camera for selfies
+                        } 
+                    });
+                    
+                    // Create hidden video element for capturing
+                    this.video = document.createElement('video');
+                    this.video.style.display = 'none';
+                    this.video.srcObject = this.stream;
+                    this.video.autoplay = true;
+                    this.video.playsInline = true;
+                    document.body.appendChild(this.video);
+                    
+                    // Wait for video to be ready
+                    await new Promise((resolve) => {
+                        this.video.onloadedmetadata = () => {
+                            this.captureCanvas.width = this.video.videoWidth;
+                            this.captureCanvas.height = this.video.videoHeight;
+                            this.isCameraReady = true;
+                            console.log('✅ Camera initialized successfully');
+                            resolve();
+                        };
+                    });
+                    
+                } catch (error) {
+                    console.error('❌ Camera initialization failed:', error);
+                    this.isCameraReady = false;
+                }
+            }
+            
+            async capturePhoto() {
+                if (!this.isCameraReady || !this.video || !this.captureCanvas) {
+                    console.error('❌ Camera not ready for photo capture');
+                    return false;
+                }
+                
+                try {
+                    console.log('📸 Capturing photo...');
+                    
+                    // Draw current video frame to canvas
+                    const canvas = this.captureCanvas;
+                    const context = this.captureContext;
+                    const video = this.video;
+                    
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0);
+                    
+                    // Convert canvas to blob
+                    const blob = await new Promise(resolve => {
+                        canvas.toBlob(resolve, 'image/jpeg', 0.9);
+                    });
+                    
+                    // Create download link
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `gizmo_photo_${Date.now()}.jpg`;
+                    
+                    // Trigger download
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    // Clean up
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    
+                    console.log('✅ Photo captured and saved');
+                    
+                    // Show visual feedback
+                    this.showPhotoFeedback();
+                    
+                    return true;
+                } catch (error) {
+                    console.error('❌ Photo capture failed:', error);
+                    return false;
+                }
+            }
+            
+            showPhotoFeedback() {
+                // Create flash effect
+                const flash = document.createElement('div');
+                flash.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: white;
+                    z-index: 9999;
+                    opacity: 0.8;
+                    pointer-events: none;
+                `;
+                document.body.appendChild(flash);
+                
+                // Animate flash
+                setTimeout(() => {
+                    flash.style.opacity = '0';
+                    flash.style.transition = 'opacity 0.3s ease';
+                }, 50);
+                
+                setTimeout(() => {
+                    document.body.removeChild(flash);
+                }, 350);
+                
+                // Show photo taken message
+                this.showResponse('📸 Fotoğraf çekildi ve galeriye kaydedildi!');
             }
             
             async initializeSpeechRecognition() {
@@ -1112,10 +1242,11 @@
             }
             
             showResponse(text) {
-                // Parse API response format: "0#/#F#/#Message"
+                // Parse API response format: "[ExpressionCode]#/#[MotionSequence]#/#[MessageToUser]#/#[photoTrue]"
                 // Split by "#/#" and take parts
                 let displayText = text;
                 let emotionCode = 0; // Default emotion
+                let shouldTakePhoto = false;
                 
                 if (text.includes('#/#')) {
                     const parts = text.split('#/#');
@@ -1129,15 +1260,33 @@
                         }
                     }
                     
-                    // Last part is the message
-                    displayText = parts[parts.length - 1];
+                    // Third part is the message (index 2)
+                    if (parts.length >= 3) {
+                        displayText = parts[2].trim();
+                    }
+                    
+                    // Fourth part is photo trigger (index 3)
+                    if (parts.length >= 4) {
+                        const photoParam = parts[3].trim().toLowerCase();
+                        shouldTakePhoto = photoParam === 'phototrue';
+                        console.log('📷 Photo parameter:', photoParam, '-> Should take photo:', shouldTakePhoto);
+                    }
                     
                     console.log('📱 Parsed response parts:', parts);
                     console.log('📱 Emotion code:', emotionCode);
                     console.log('📱 Display text:', displayText);
+                    console.log('📱 Take photo:', shouldTakePhoto);
                     
                     // Apply emotion based on response
                     this.applyResponseEmotion(emotionCode);
+                    
+                    // Take photo if requested
+                    if (shouldTakePhoto) {
+                        console.log('📸 Photo requested by API, capturing...');
+                        setTimeout(() => {
+                            this.capturePhoto();
+                        }, 500); // Small delay to let emotion apply first
+                    }
                 }
                 
                 this.responseDisplay.textContent = displayText;
@@ -1366,6 +1515,28 @@
                 if (this.blinkInterval) {
                     clearInterval(this.blinkInterval);
                     this.blinkInterval = null;
+                }
+                if (this.hardwareCheckInterval) {
+                    clearInterval(this.hardwareCheckInterval);
+                    this.hardwareCheckInterval = null;
+                }
+                
+                // Clean up camera resources
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream = null;
+                }
+                if (this.video) {
+                    this.video.srcObject = null;
+                    if (this.video.parentNode) {
+                        this.video.parentNode.removeChild(this.video);
+                    }
+                    this.video = null;
+                }
+                if (this.captureCanvas && this.captureCanvas.parentNode) {
+                    this.captureCanvas.parentNode.removeChild(this.captureCanvas);
+                    this.captureCanvas = null;
+                    this.captureContext = null;
                 }
             }
         }
