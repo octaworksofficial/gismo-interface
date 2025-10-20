@@ -1158,14 +1158,20 @@
                 await this.testWebhookConnection();
                 
                 try {
+                    // Prepare request body with sessionId
+                    const requestBody = {
+                        "user-prompt": command,
+                        "sessionId": "3"
+                    };
+                    
                     // Send to webhook API
-                    console.log('🌐 Sending request to API...');
+                    console.log('🌐 Sending request to API with body:', requestBody);
                     const response = await fetch('https://n8n-production-14b9.up.railway.app/webhook/user-prompt', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'text/plain'
+                            'Content-Type': 'application/json'
                         },
-                        body: command
+                        body: JSON.stringify(requestBody)
                     });
                     
                     console.log('📡 Response status:', response.status);
@@ -1199,13 +1205,18 @@
                         console.log('🔄 Trying alternative approach...');
                         // Try with different headers and no-cors mode
                         try {
+                            const fallbackBody = {
+                                "user-prompt": command,
+                                "sessionId": "3"
+                            };
+                            
                             await fetch('https://n8n-production-14b9.up.railway.app/webhook/user-prompt', {
                                 method: 'POST',
                                 mode: 'no-cors',
                                 headers: {
-                                    'Content-Type': 'text/plain'
+                                    'Content-Type': 'application/json'
                                 },
-                                body: command
+                                body: JSON.stringify(fallbackBody)
                             });
                             this.showResponse('Komut gönderildi (no-cors mode)');
                         } catch (secondError) {
